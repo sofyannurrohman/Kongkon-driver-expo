@@ -15,7 +15,7 @@ export default function SplashScreen() {
 
   return (
     <View className="flex-1 justify-center items-center bg-[#3B1E54]">
-      <Image source={require("../assets/images/Loreact-logogoSplash.png")} className="w-24 h-24" />
+      <Image source={require("../assets/images/react-logo.png")} className="w-24 h-24" />
       <Text className="mt-5 text-xl text-white">Welcome to Kongkon Driver</Text>
     </View>
   );
