@@ -5,8 +5,9 @@ import io, { Socket } from 'socket.io-client';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { RootState } from "@/store";
+import axiosInstance from "@/api/axiosInstance";
 
-const SOCKET_SERVER_URL = 'http://192.168.100.246:3333';
+const SOCKET_SERVER_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Home() {
     const user = useSelector((state: RootState) => state.user.userInfo);
@@ -104,7 +105,7 @@ export default function Home() {
         setIsDriverActive(value);
         if (value) {
             try {
-                const response = await axios.post(`http://192.168.100.246:3333/api/v1/partner/location/${userId}`, {
+                const response = await axiosInstance.post(`/partner/location/${userId}`, {
                     latitude: 37.9421,
                     longitude: -122.3203,
                 });
