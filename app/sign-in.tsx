@@ -47,22 +47,22 @@ export default function SignIn() {
 
   return (
     <View className="flex-1 justify-center items-center px-5">
-      
+
       <View className="bg-white rounded-lg shadow-lg p-10 w-96">
-      <View className="flex-row mb-10 justify-center"> 
-        <Image 
-          source={require("../assets/images/logoSign.png")} 
-          className="w-full mr-5" 
-          style={{ width: 66, height: 72 }}// Set the width and height explicitly
-          resizeMode="contain" 
-        />
-        <View className="flex-col text-center justify-center">
-          <Text className="text-2xl mb-2 font-comfortaa">Kongkon</Text>
-          <Text className="text-2xl font-comfortaa">Partner</Text>
+        <View className="flex-row mb-10 justify-center">
+          <Image
+            source={require("../assets/images/logoSign.png")}
+            className="w-full mr-5"
+            style={{ width: 66, height: 72 }}// Set the width and height explicitly
+            resizeMode="contain"
+          />
+          <View className="flex-col text-center justify-center">
+            <Text className="text-2xl mb-2 font-comfortaa">Kongkon</Text>
+            <Text className="text-2xl font-comfortaa">Partner</Text>
+          </View>
         </View>
-      </View>
-       
-      <Text className="text-lg mb-5 font-poppins">Sign In to access</Text>
+
+        <Text className="text-lg mb-5 font-poppins">Sign In to access</Text>
         <Text className="block text-md font-medium text-gray-700 mb-3">Email</Text>
         <TextInput
           placeholder="Please input your email"

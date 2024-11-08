@@ -1,24 +1,33 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { View, Text, Alert, Switch, Image } from "react-native";
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from "react";
+import { View, Text, Alert, StyleSheet, Switch, Image } from "react-native";
 import { useSelector } from "react-redux";
 import io, { Socket } from 'socket.io-client';
-import axios from 'axios';
-import Navbar from '../components/Navbar';
+import Navbar from '../../components/Navbar';
 import { RootState } from "@/store";
 import axiosInstance from "@/api/axiosInstance";
+import { useNavigation } from "expo-router";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { useWebSocket } from "@/socket/webSocketProvider";
 
-const SOCKET_SERVER_URL = process.env.EXPO_PUBLIC_API_URL;
+const SOCKET_SERVER_URL = process.env.EXPO_PUBLIC_API_URL_SOCKET;
 
 export default function Home() {
     const user = useSelector((state: RootState) => state.user.userInfo);
     const userId = user?.id;
+    const [userDetail, setUserDetail] = useState(null)
     const socketRef = useRef<Socket | null>(null); // Use ref to store the socket instance
-    const [orderId, setOrderId] = useState<string | null>(null);
+    const [orderId, setOrderId] = useState<number | null>(null);
     const [isDriverActive, setIsDriverActive] = useState(false);
-
-    useEffect(() => {
+console.log(SOCKET_SERVER_URL);
+    useEffect( () => {
         if (!userId) return;
-
+        const fetchOrderDetails = async () => {
+            const userResponse = await axiosInstance.get(`/orders/${userId}`);
+            const userData = userResponse.data.data
+            setUserDetail(userData)
+        }
+        console.log(userDetail)
         const socket = io(SOCKET_SERVER_URL, {
             query: { userId },
             transports: ['websocket'],
@@ -62,7 +71,7 @@ export default function Home() {
         };
     }, [userId]);
 
-    const handleOrderAssignment = useCallback((data: { orderId: string }) => {
+    const handleOrderAssignment = useCallback((data: { orderId: number }) => {
         console.log('Received order assignment:', data);
         setOrderId(data.orderId);
 
@@ -88,7 +97,7 @@ export default function Home() {
             console.error('Order ID is missing');
             return;
         }
-    
+
         socket.emit('driverResponse', { driverId: userId, orderId, accepted: response === 'accepted' }, (acknowledgment) => {
             if (acknowledgment?.error) {
                 console.error('Error emitting driverResponse:', acknowledgment.error);
@@ -96,7 +105,7 @@ export default function Home() {
                 console.log('Acknowledgment received:', acknowledgment);
             }
         });
-    
+
         console.log(`Sent response: ${response} for order ${orderId}`);
         setOrderId(null); // Clear current order ID after responding
     };
@@ -116,20 +125,35 @@ export default function Home() {
             }
         }
     };
+    const navigation = useNavigation();
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerTitle: () => (
+                <Navbar
+                    profilePicture="https://via.placeholder.com/100"
+                    name={userDetail?.name}
+                    rating={4.8}
+                    completedOrders={120}
+                />
+            ),
+            headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuIconContainer}>
+                    <FontAwesome5 name="bars" size={24} color="#fff" />
+                </TouchableOpacity>
+            ),
+            headerLeftContainerStyle: {
+                paddingLeft: 10,
+            },
+        });
+    }, [navigation]);
 
     return (
-        <View className="flex-1 items-center p-5">
-            {/* Navbar with hardcoded profile details */}
-            <Navbar
-                profilePicture="https://via.placeholder.com/100"
-                name="John Doe"
-                rating={4.8}
-                completedOrders={120}
-            />
+        <View className="flex-1 items-center p-5 bg-white">
 
             {/* Main dashboard content */}
             <Image
-                source={require("../assets/images/dashboard.png")}
+                source={require("../../assets/images/dashboard.png")}
                 className="mt-12"
                 style={{ width: 300, height: 200 }}
                 resizeMode="contain"
@@ -147,3 +171,23 @@ export default function Home() {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    text: {
+        fontSize: 20,
+        color: '#333',
+    },
+    menuIconContainer: {
+        marginLeft: 10,
+    },
+    headerTitle: {
+        fontSize: 22,
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+});
