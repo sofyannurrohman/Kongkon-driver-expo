@@ -17,17 +17,23 @@ export default function Home() {
     const userId = user?.id;
     const [userDetail, setUserDetail] = useState(null)
     const socketRef = useRef<Socket | null>(null); // Use ref to store the socket instance
+    const orderIdRef = useRef<number | null>(null); // Holds the latest order ID
     const [orderId, setOrderId] = useState<number | null>(null);
     const [isDriverActive, setIsDriverActive] = useState(false);
 console.log(SOCKET_SERVER_URL);
     useEffect( () => {
-        if (!userId) return;
-        const fetchOrderDetails = async () => {
-            const userResponse = await axiosInstance.get(`/orders/${userId}`);
-            const userData = userResponse.data.data
-            setUserDetail(userData)
-        }
-        console.log(userDetail)
+        if (!userId) {return};
+        const fetchUserDetails = async () => {
+            try {
+              const userResponse = await axiosInstance.get(`/users/${userId}`);
+              const userData = userResponse.data.data;
+              setUserDetail(userData);
+            } catch (error) {
+              console.error("Error fetching user details:", error);
+              Alert.alert("Error", "Failed to fetch user details. Please try again.");
+            }
+          };
+          fetchUserDetails();
         const socket = io(SOCKET_SERVER_URL, {
             query: { userId },
             transports: ['websocket'],
@@ -73,6 +79,7 @@ console.log(SOCKET_SERVER_URL);
 
     const handleOrderAssignment = useCallback((data: { orderId: number }) => {
         console.log('Received order assignment:', data);
+        orderIdRef.current = data.orderId;
         setOrderId(data.orderId);
 
         Alert.alert(
@@ -92,13 +99,13 @@ console.log(SOCKET_SERVER_URL);
             console.error('Socket is not connected');
             return;
         }
-        console.log(orderId)
-        if (!orderId) {
+        const currentOrderId = orderIdRef.current;
+        if (!currentOrderId) {
             console.error('Order ID is missing');
             return;
         }
 
-        socket.emit('driverResponse', { driverId: userId, orderId, accepted: response === 'accepted' }, (acknowledgment) => {
+        socket.emit('driverResponse', { driverId: userId, orderId:currentOrderId, accepted: response === 'accepted' }, (acknowledgment) => {
             if (acknowledgment?.error) {
                 console.error('Error emitting driverResponse:', acknowledgment.error);
             } else {
@@ -106,7 +113,8 @@ console.log(SOCKET_SERVER_URL);
             }
         });
 
-        console.log(`Sent response: ${response} for order ${orderId}`);
+        console.log(`Sent response: ${response} for order ${currentOrderId}`);
+        orderIdRef.current = null; // Clear ref after responding
         setOrderId(null); // Clear current order ID after responding
     };
 
